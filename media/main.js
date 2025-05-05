@@ -49,6 +49,10 @@ const vscode = acquireVsCodeApi();
           document.getElementById('suggestion').textContent = '❌ No suggestion.';
           showToast('❌ ' + message.text, '#ff5555');
         }
+        else if (message.command === 'validationError') {
+          document.getElementById('suggestion').textContent = '❌ No suggestion.';
+          showToast('❌ ' + message.text, '#ff5555');
+        }
       });
   
       themeToggle.addEventListener('click', () => {
