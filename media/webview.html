@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CodeGenie AI</title>
+    <link rel="stylesheet" href="{{styleUri}}">
+    
+  </head>
+  
+  <body>
+    <button id="themeToggle">🌙</button>
+    <h2>✨ CodeGenie AI ✨</h2>
+  
+    <div id="controls">
+      <select id="actionSelect">
+        <option value="" disabled selected hidden>-- Choose an Action --</option>
+        <option value="fetchSuggestion">💡 Get Suggestion</option>
+        <option value="insertCode">✍ Insert Code</option>
+        <option value="debug">🐞 Debug Code</option>
+        <option value="explain">📖 Explain Code</option>
+      </select>
+      <button id="executeBtn">🚀 Execute</button>
+    </div>
+  
+    <details open>
+      <summary style="cursor:pointer; font-size:18px;">🔍 View Suggestion</summary>
+      <pre id="suggestion">🔮 No suggestion yet.</pre>
+    </details>
+  
+    <div id="overlay">
+      <div class="triangle-spinner"></div>
+    </div>
+  
+    <div id="toast" class="toast"></div>
+  
+    <script  src="{{scriptUri}}">
+          </script>
+  </body>
+  </html>
+  
