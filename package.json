@@ -19,8 +19,39 @@
                 "command": "codegenie.generateCode",
                 "title": "Codegenie:Generate"
             }
+            
+        ],
+        "keybindings": [
+        {
+            "command": "codegeniesam.generateCode",
+            "key": "ctrl+alt+c",
+            "when": "editorTextFocus"
+        }
+       ],
+       "languages": [
+      {
+        "id": "javascript",
+        "extensions": [
+          ".js"
+        ],
+       "aliases": [
+          "JavaScript"
         ]
-    },
+      }
+    ],
+
+
+     "completionItemProvider": [
+      {
+        "language": "javascript",
+        "triggerCharacters": [
+          "(",
+          " ",
+          "="
+        ]
+      }
+    ]
+  },
     "scripts": {
         "vscode:prepublish": "npm run package",
         "compile": "webpack",
