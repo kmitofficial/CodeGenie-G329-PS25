@@ -1,10 +1,9 @@
+
 import * as vscode from 'vscode';
 import axios from 'axios';
 import * as fs from 'fs';
 
-type CodeGenResponse = {
-  completion: string;
-};
+
 export function activate(context: vscode.ExtensionContext) {
   vscode.window.onDidChangeActiveTextEditor(editor => {
     if (editor) {
@@ -17,11 +16,14 @@ export function activate(context: vscode.ExtensionContext) {
 
   let disposable = vscode.commands.registerCommand('codegenie.generateCode', () => {
     savedEditor = vscode.window.activeTextEditor;
-
+    
     if (!savedEditor) {
       vscode.window.showInformationMessage('Please open and focus a file to use CodeGenie.');
       return;
     }
+    const languageId = savedEditor.document.languageId;
+    console.log("📦 Detected Language:", languageId);
+
 
     const panel = vscode.window.createWebviewPanel(
       'codeGenieSuggestions',
@@ -43,7 +45,6 @@ export function activate(context: vscode.ExtensionContext) {
       if (message.command === 'fetchSuggestion') {
         const contextText = savedEditor.document.getText(selection);
         if (!contextText || contextText.trim() === "") {
-          // Send validation error to the WebView
           panel.webview.postMessage({
             command: 'validationError',
             text: 'Please select some code in the editor.'
@@ -51,12 +52,17 @@ export function activate(context: vscode.ExtensionContext) {
         
           return;
         }
-        const prompt = `${contextText} \n Provide only the correct code within brackticks. Do not provide explanations.`;
-         console.log(prompt);
+       
+
+        // const prompt = `${contextText} \n Provide only the correct code within brackticks. Do not provide explanations.`;
+        const prompt = `Here is a ${languageId} code snippet:\n\n${contextText}\n\nProvide only the corrected code inside triple backticks. Do not explain anything.`;
+
+        
+        console.log(prompt);
         try {
-          const response = await axios.post<CodeGenResponse>("http://localhost:8000/generate", {
+          const response = await axios.post("http://localhost:8000/generate", {
             prompt,
-            max_new_tokens: 500 // You can make this dynamic if needed
+            max_new_tokens: 500 
           });
           function extractCodeBlock(text: string): string {
             const tripleBacktickMatch = text.match(/```(?:\w+)?\n([\s\S]*?)```/);
@@ -68,10 +74,11 @@ export function activate(context: vscode.ExtensionContext) {
               return singleBacktickMatch[1].trim();
             }
         
-            return text.trim(); // Use the full response if no backticks
+            return text.trim(); 
           }
         
           lastGeneratedCode = extractCodeBlock(response.data.completion);
+          
           console.log("🚀 Suggested output from model:", lastGeneratedCode);
 
           panel.webview.postMessage({ command: 'showSuggestion', suggestion: lastGeneratedCode });
@@ -82,7 +89,6 @@ export function activate(context: vscode.ExtensionContext) {
       }else if (message.command === 'debug') {
         const contextText = savedEditor.document.getText(savedEditor.selection);
         if (!contextText || contextText.trim() === "") {
-          
           // Send validation error to the WebView
           panel.webview.postMessage({
             command: 'validationError',
@@ -91,17 +97,17 @@ export function activate(context: vscode.ExtensionContext) {
         
           return;
         }
-      
+        
         const debugPrompt = `You are a professional debugging assistant. Analyze the given Java code for both **syntax errors** and **logical errors**.
-If any operator is misused (like using = instead of ==) or any logic is incorrect (e.g., using %3 to check for even numbers), fix it.
-Clearly understand the intent of the code (like checking if a number is even) and return the corrected code **only**.
+        If any operator is misused (like using = instead of ==) or any logic is incorrect (e.g., using %3 to check for even numbers), fix it.
+        Clearly understand the intent of the code (like checking if a number is even) and return the corrected code **only**.
 
-Here is the buggy code:\n\n${contextText}`;
+        Here is the buggy ${languageId} code:\n\n${contextText}`;
 
         console.log(debugPrompt);
       
         try {
-          const response = await axios.post<CodeGenResponse>("http://localhost:8000/generate", {
+          const response = await axios.post("http://localhost:8000/generate", {
             prompt: debugPrompt,
             max_new_tokens: 500
           });
@@ -117,7 +123,7 @@ Here is the buggy code:\n\n${contextText}`;
       }
       else if (message.command === 'explain') {
         const contextText = savedEditor.document.getText(savedEditor.selection);
-        if (!contextText || contextText.trim() === "") { 
+        if (!contextText || contextText.trim() === "") {
           // Send validation error to the WebView
           panel.webview.postMessage({
             command: 'validationError',
@@ -126,13 +132,14 @@ Here is the buggy code:\n\n${contextText}`;
         
           return;
         }
+        
         const explainCode = `You are a professional code assistant. Analyze the given code, and Explain to the given code in crystal clear and simple way.
-Here is the code:\n\n${contextText}`;
+        Here is the ${languageId} code:\n\n${contextText}`;
 
         console.log(explainCode);
       
         try {
-          const response = await axios.post<CodeGenResponse>("http://localhost:8000/generate", {
+          const response = await axios.post("http://localhost:8000/generate", {
             prompt: explainCode,
             max_new_tokens: 500
           });
@@ -148,14 +155,10 @@ Here is the code:\n\n${contextText}`;
       }
       else if (message.command === 'insertCode') {
         if (!lastGeneratedCode || lastGeneratedCode.trim() === "") {
-          // Send validation error to the WebView
-          panel.webview.postMessage({
-            command: 'validationError',
-            text: 'No code suggestion to insert.'
-          });
-        
+          vscode.window.showInformationMessage("No code suggestion to insert.");
           return;
         }
+
         await savedEditor.edit(editBuilder => {
           editBuilder.insert(selection.active, lastGeneratedCode.trim());
         });
@@ -185,4 +188,3 @@ function getWebviewContent(panel: vscode.WebviewPanel, extensionUri: vscode.Uri)
 
   return updatedHtml;
 }
-
